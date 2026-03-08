@@ -1,0 +1,136 @@
+%% 
+%% Copyright 2007-2024 Elsevier Ltd
+%% 
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.3 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% Template article for Elsevier's document class `elsarticle'
+%% with harvard style bibliographic references
+
+\documentclass[preprint,12pt,authoryear]{elsarticle}
+% \documentclass[twocolumn,10pt,authoryear]{elsarticle}
+% \usepackage[a4paper, margin=1.5cm]{geometry} % sets all margins to 2cm
+
+
+%%%%! added package 
+
+\usepackage{soul}  %  Highlight text
+\usepackage[dvipsnames]{xcolor} 
+
+%%%%! end 
+
+
+\usepackage{amssymb} %% The amssymb package provides various useful mathematical symbols
+\usepackage{amsmath} %% The amsmath package provides various useful equation environments.
+
+
+
+\usepackage{graphicx} %figures
+\usepackage{subcaption}  % sub figure
+\usepackage{amsmath} % equations
+
+\usepackage{float} % to fix figure 
+
+\usepackage[T1]{fontenc}    % for handling accented characters
+\usepackage[hidelinks,colorlinks=true,linkcolor=blue,citecolor=blue]{hyperref}
+\usepackage{xurl}  % Forcing linebreaks in url in bibliographie 
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+%% \usepackage{amsthm} %% The amsthm package provides extended theorem environments
+
+\usepackage{lineno} %% adds line numbers for the whole article with \linenumbers. or for part  \begin{linenumbers} \end{linenumbers}
+
+\usepackage{pdflscape} 
+\usepackage{multirow} 
+
+\journal{Engineering Applications of Artificial Intelligence}
+
+\begin{document}
+\sloppy
+
+\begin{frontmatter}
+
+
+\title{A Comprehensive Highway Benchmark for Investigating State Representations in Reinforcement Learning for Lane Changing} %% Article title
+
+
+\author[label1]{Meriem Bouali\corref{cor1}}
+\ead{bouali@estin.dz}
+
+\author[label1]{Abderrazak Sebaa}
+\ead{sebaa@estin.dz} 
+
+\author[label2]{Nadir Farhi}
+\ead{nadir.farhi@univ-eiffel.fr}
+
+\cortext[cor1]{Corresponding author}
+\affiliation[label1]{organization={Laboratoire LITAN, École supérieure en Sciences et Technologies de l'Informatique et du Numérique},
+            addressline={RN 75},
+            city={Amizour 06300},
+            state={Bejaia},
+            country={Algérie}}
+
+\affiliation[label2]{organization={Cosys-Grettia, University Gustave Eiffel},
+            state={F-77454 Marne-la-Vallée},
+            country={France}}
+
+
+
+
+
+%% Abstract
+\begin{abstract}
+Autonomous vehicles have garnered significant attention in recent years due to their potential to improve road safety and efficiency. In this research, we propose an enhanced driving model specifically designed for highway scenarios, with a particular focus on lane-changing maneuvers. In this research, our objective is improving driving models specifically designed for highway scenarios, with a particular focus on lane-changing maneuvers.
+% Our methodology is based on using reinforcement learning to train a two-layer intelligent decision-making model . Experimental results demonstrate that our approach outperforms existing work in which their second layer is a rule based model. Our work may reduce human error that is the main cause for traffic congestion and road collisions. 
+
+\end{abstract}
+
+
+%%Research highlights
+\begin{highlights}
+\item Built highway benchmark covering a wide range of driving scenarios and road layouts.
+\item Proposition of a new environment state that is not limited by the number of lanes or road geometry.
+\item First investigation of state encoding impact on reinforcement learning for lane changing.
+\end{highlights}
+
+%% Keywords
+\begin{keyword}
+Lane Changing \sep Reinforcement Learning \sep Autonomous vehicles \sep  Sequential decision-making.
+\end{keyword}
+
+\end{frontmatter}
+
+
+% \linenumbers
+
+%% main text
+%%
+
+%% Use \section commands to start a section
+\section{Introduction}
+\label{sec:into}
+
+\section{Results and Discussion}
+\label{sec:result}
+
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\end{document}
+
+\endinput
+%%
+%% End of file `elsarticle-template-harv.tex'.
+
+

@@ -1,0 +1,18 @@
+<edges>
+    <!-- Main stream -->
+    <edge from="n0" to="n1" id="0to1" type="basic" />
+    <edge from="n1" to="n2" id="1to2" type="weaving" />
+    <edge from="n2" to="n3" id="2to3" type="basic" />
+    <edge from="n3" to="n4" id="3to4" type="weaving" />
+    <edge from="n4" to="n5" id="4to5" type="basic" />
+    <!-- <edge from="n5" to="n6" id="5to6" type="weaving" />
+    <edge from="n6" to="n7" id="6to7" type="basic" /> -->
+
+    <!-- ramps -->
+    <edge from="n8" to="n1" id="8to1" type="ramp" />
+    <edge from="n2" to="n9" id="2to9" type="ramp" />
+    <edge from="n10" to="n3" id="10to3" type="ramp" />
+    <edge from="n4" to="n11" id="4to11" type="ramp" />
+    <!-- <edge from="n12" to="n5" id="12to5" type="ramp" />
+    <edge from="n6" to="n13" id="6to13" type="ramp" /> -->
+</edges>

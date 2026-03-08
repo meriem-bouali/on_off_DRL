@@ -1,0 +1,30 @@
+# Python specific
+__pycache__/
+
+
+# Distribution / packaging
+*.egg-info/
+build/
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+
+# VS Code specific
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.code-workspace
+
+
+
+
+# logs/
+logs/train/episode_metrics
+logs/train/loss_metrics
+
+
+# ipython notebook checkpoints
+**/.ipynb_checkpoints/

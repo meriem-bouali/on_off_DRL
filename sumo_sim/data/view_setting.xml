@@ -1,0 +1,73 @@
+<viewsettings>
+    <scheme  name="default">
+        <vehicles
+            
+            vehicleQuality="2" 
+            showBlinker="0">
+        </vehicles>   
+
+        <edges  
+          laneShowBorders="1"
+          laneName_show="0"
+        />  
+
+         
+    </scheme>
+
+    <scheme name="color by speed">
+        <vehicles
+            vehicleMode="8" 
+            vehicleQuality="2" 
+            showBlinker="0">
+
+           
+
+            <colorScheme name="by speed" interpolated="1">
+                <entry color="red" threshold="0"/>
+                <entry color="#ff1c00" threshold="1"/>
+                <entry color="#ff3800" threshold="2"/>
+                <entry color="#ff5500" threshold="3"/>
+                <entry color="#ff7100" threshold="4"/>
+                <entry color="#ff8d00" threshold="5"/>
+                <entry color="#ffaa00" threshold="6"/>
+                <entry color="#ffc600" threshold="7"/>
+                <entry color="#ffe200" threshold="8"/>
+                <entry color="#ffff00" threshold="9"/>
+                <entry color="#e2ff00" threshold="10"/>
+                <entry color="#c6ff00" threshold="11"/>
+                <entry color="#aaff00" threshold="12"/>
+                <entry color="#8dff00" threshold="13"/>
+                <entry color="#71ff00" threshold="14"/>
+                <entry color="#55ff00" threshold="15"/>
+                <entry color="#38ff00" threshold="16"/>
+                <entry color="#1cff00" threshold="17"/>
+                <entry color="#00ff00" threshold="18"/>
+                <entry color="#00ff1c" threshold="19"/>
+                <entry color="#00ff38" threshold="20"/>
+                <entry color="#00ff55" threshold="21"/>
+                <entry color="#00ff71" threshold="22"/>
+                <entry color="#00ff8d" threshold="23"/>
+                <entry color="#00ffaa" threshold="24"/>
+                <entry color="#00ffc6" threshold="25"/>
+                <entry color="#00ffe2" threshold="26"/>
+                <entry color="#00ffff" threshold="27"/>
+                <entry color="#00e2ff" threshold="28"/>
+                <entry color="#00c6ff" threshold="29"/>
+                <entry color="#00aaff" threshold="30"/>
+                <entry color="#008dff" threshold="31"/>
+                <entry color="#0071ff" threshold="32"/>
+                <entry color="blue" threshold="33"/>
+            </colorScheme>
+            
+        </vehicles>   
+
+        <edges  
+          laneShowBorders="1"
+          laneName_show="0"
+        />  
+
+         
+    </scheme>
+
+
+</viewsettings>

@@ -1,0 +1,7 @@
+
+            <!-- number of lanes in mainstream: 3 ;  Speed limit : 120 -->
+            <types>
+                <type id="basic" priority="-1" numLanes="3" speed="33.333333333333336" />
+                <type id="weaving" priority="-1" numLanes="4" speed="33.333333333333336" />
+                <type id="ramp" priority="-1" numLanes="1" speed="33.333333333333336"/>
+            </types>
