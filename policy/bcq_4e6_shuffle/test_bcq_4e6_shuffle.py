@@ -1,7 +1,6 @@
 import sys
 import os
 
-# sys.path.insert(0, os.path.expanduser("~/Documents/rl-state-study"))
 
 from dqn import HYPER_PARAMS, network_config, BCNetwork  # network_config_SumoGui
 from rl_env.env_tools import CustomEnvWrapper, make_env
@@ -23,20 +22,17 @@ The agent's state representation is derived directly from SUMO's graphical inter
 """
 
 
-
 class TestBCQ4e6Shuffle:
-    def __init__(self, model_name: str, seed:list,max_episodes: int, gui: str = False):
+    def __init__(self, model_name: str, seed: list, max_episodes: int, gui: str = False):
         # self.model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "save", model_name)
 
-
         self.model_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "save", "training_state_disk", model_name
-            )
-
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "save", "training_state_disk", model_name
+        )
 
         self.gui = gui
         self.ego_id = SC.ego_veh_id
-        self.seed=seed
+        self.seed = seed
 
         # Set the environment variables for CUDA device configuration
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -55,7 +51,7 @@ class TestBCQ4e6Shuffle:
         agent, _, lr, *_ = model_id.split("_")
 
         # Instantiate the corresponding network class based on the agent type
-        self.network=BCNetwork(
+        self.network = BCNetwork(
             device(("cuda:" + HYPER_PARAMS.gpu) if cuda.is_available() else "cpu"),
             float(lr),
             network_config,
@@ -69,11 +65,10 @@ class TestBCQ4e6Shuffle:
         # Load the model and # Load its parameters into the networkparameters into the network
 
         self.network.load(self.model_path)
-        
+
         self.env.setSeed(self.seed[0])
         # Reset the environment
         self.obs = self.env.reset()
-        
 
         # Initialize variables
         self.action = 0
@@ -119,7 +114,6 @@ class TestBCQ4e6Shuffle:
                 self.env.setSeed(self.seed[self.ep])
                 # Reset the environment
                 self.obs = self.env.reset()
-                
 
     def run(self):
         try:
@@ -131,4 +125,4 @@ class TestBCQ4e6Shuffle:
 
 
 if __name__ == "__main__":
-    TestBCQ4e6Shuffle(model_name="BCQ_lr_0.0001_BCQ4e6Shuffle_model.pack",seed=SC.seed_test, max_episodes=len(SC.seed_test)).run()
+    TestBCQ4e6Shuffle(model_name="BCQ_lr_0.0001_BCQ4e6Shuffle_model.pack", seed=SC.seed_test, max_episodes=len(SC.seed_test)).run()
