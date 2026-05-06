@@ -3,16 +3,73 @@ import msgpack
 import msgpack_numpy as m
 import numpy as np
 import torch as T
-from collections import deque
-from .dqn_config import HYPER_PARAMS
 from colorama import Fore
 from datetime import timedelta
 import time
+import pandas as pd
+from itertools import islice
+from torch.utils.data import TensorDataset, DataLoader
+from collections import deque
 
 m.patch()  # automatically force all msgpack serialization and deserialization routines
 
 
 class AgentOffMixin:
+    def loading_agent_data(self, resume_iteration):
+        # get csv files names
+        csv_files = [os.path.join(self.csv_dir_path, f) for f in os.listdir(self.csv_dir_path) if f.endswith(".csv")]
+
+        # Read all CSVs in one go
+        df = pd.concat([pd.read_csv(f) for f in csv_files], ignore_index=True)
+
+        # data to transition data
+        state_cols = [
+            "has_right_lane",
+            "has_left_lane",
+            "driving_in_weaving",
+            "dist_to_onramp",
+            "dist_to_offramp",
+            "leader_gap",
+            "leader_relatif_s",
+            "follower_gap",
+            "follower_relatif_s",
+            "left_leader_gap",
+            "left_leader_relatif_s",
+            "left_follower_gap",
+            "left_follower_relatif_s",
+            "right_leader_gap",
+            "right_leader_relatif_s",
+            "right_follower_gap",
+            "right_follower_relatif_s",
+        ]
+
+        next_state_cols = ["next_" + col for col in state_cols]
+
+        # input_dim, output_dim = len(state_cols), len(df["action"].unique())
+        # Convert to tensors
+        obses_t = T.tensor(df[state_cols].values, dtype=T.float32).to(self.device)
+        actions_t = T.tensor(df["action"].values, dtype=T.long).to(self.device).unsqueeze(1)
+        rews_t = T.tensor(df["reward"].values, dtype=T.float32).to(self.device).unsqueeze(1)
+        dones_t = T.tensor(df["done"].values, dtype=T.float32).to(self.device).unsqueeze(1)
+        new_obses_t = T.tensor(df[next_state_cols].values, dtype=T.float32).to(self.device)
+
+        # Create TensorDataset
+        dataset = TensorDataset(obses_t, actions_t, rews_t, dones_t, new_obses_t)
+
+        # Create DataLoader
+        self.dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=self.shuffle)
+
+        self.dataloader_iter = iter(self.dataloader)
+
+        # Skip batches if resuming (deque faster than for loop)
+        batches_to_skip = resume_iteration % len(self.dataloader)
+        deque(islice(self.dataloader_iter, batches_to_skip), maxlen=0)
+
+        size_agent_data = len(df)
+        df.drop(df.index, inplace=True)  # memory freeing
+
+        return size_agent_data
+
     def save_model(self):
         print("\n Saving model...")
         params_dict = {

@@ -1,10 +1,15 @@
-from .utils.custom_abc_meta import CustomABCMeta, abstract_attribute
+from .utils.custom_abc_meta import CustomABCMeta
 from .network import BCNetwork
 from .dqn_config import HYPER_PARAMS
+from .agent_off_mixin import AgentOffMixin
+
+
 import os
-import pandas as pd
-from itertools import islice
 import torch.nn.functional as F
+from colorama import Fore
+import time
+import torch as T
+from torch.utils.tensorboard.writer import SummaryWriter
 
 
 # // if HYPER_PARAMS.buffer_location == "disk":
@@ -13,54 +18,35 @@ import torch.nn.functional as F
 # //     from .replay_memory_ram import ReplayMemoryNaive, ReplayMemoryPrioritized
 
 
-from colorama import Fore
-import time
-import math
-import random
-import numpy as np
-from collections import deque
-
-from typing import Union
-from .agent_off_mixin import AgentOffMixin
-
-import torch as T
-from torch.utils.data import TensorDataset, DataLoader
-from torch.utils.tensorboard.writer import SummaryWriter
-
-"""
-This module implements different Deep Q-Network (DQN) algorithms.
-    - The `Agent` class defines the common attributes and methods required by the DQN algorithms, such as model saving/loading, logging,
-      storing transitions, action selection, etc.
-    - The `SimpleAgent`, `DoubleAgent`, and `PerDoubleAgent` classes inherit from the `Agent` class and define the `learn()` function, 
-      which implements a single step of the learning process for a given DQN algorithm.
-    - The `DQNAgent`, `DoubleDQNAgent`, `DuelingDoubleDQNAgent`, and `PerDuelingDoubleDQNAgent` classes initialize the neural networks 
-      and replay memory required for each algorithm.
-"""
-
-
 class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
     """
-    Abstract base class for DQN agent. It must be extended by specific DQN agent implementations.
-    Define the common attributes and methods required by the DQN algorithmes.
-    These functions include model saving/loading, logging, storing transitions, selecting actions, etc.
+    Implementation of the BCQ algorithm for a discrete action space
 
-    Attributes:
+
+    Args:
         lr (float): Learning rate.
         gamma (float): Discount factor.
-        nn_conf_func (function): Function to configure the neural network.
-        input_dim (tuple): Dimensions of the input data (state space).
-        output_dim (int): Dimension of the output data (action space).
-        batch_size (int): Size of the mini-batches.
-        target_update_freq (int): Target network update frequency (in steps).
-        target_soft_update (bool): # Whether to use target network soft update.
-        tau (float): Soft update rate, which controls how quickly the target network's parameters are updated
-        save_freq (int): Frequency (in steps) at which the model is saved
-        log_freq (int): Frequency (in steps) at which training metrics are logged.
-        save_dir (str): Directory where the model is saved.
-        log_dir (str): Directory where TensorBoard logs are stored.
-        load (bool): Whether to load a pre-trained model and resume training.
-        algo (str): Name/identifier of the DQN algorithm.
-        gpu (str): identifier of GPU device .
+        gpu (str): identifier of GPU device.
+        csv_dir_name (str) :  Name of the directory containing the agent training data (CSV files).
+        policy (str) : Policy name or identifier used by the agent.
+        input_dim (tuple): Shape of the input data (state space).
+        output_dim (int): Shape of the output data (action space).
+        algo (str): Name/identifier of the algorithm.
+        batch_size (int) : Number of samples per training batch.
+        target_update_freq (int) : Frequency (in training steps) for updating the target network.
+        target_soft_update (bool) : Whether target network parameters are updated using soft updates.
+        tau (float) : Soft update rate used when `target_soft_update=True`, it controls how quickly the target network's parameters are updated
+        nn_conf_func (function): Function to configure the neural network (architecture, loss function, and optimizer).
+
+        save_freq (int) : Frequency (in training steps) at which model checkpoints are saved.
+        log_freq (int) : Frequency (in training steps) at which training metrics are logged.
+        save_dir (str) : Directory path for saving model checkpoints.
+        log_dir (str):  Directory path for storing TensorBoard logs.
+        load (bool) : Whether to load a pre-trained model and checkpoint and resume training.
+
+
+        shuffle (bool): Whether to shuffle training data before batching.
+        BCQ_threshold (float) : Threshold parameter used in BCQ-based action filtering/selection.
 
     Abstract Methods:
         online_network (DeepQNetwork | DuelingDeepQNetwork): The current network.
@@ -79,11 +65,10 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
 
     def __init__(
         self,
-        csv_dir_name: str,  # ? added
-        #! mode: str,  # ? added
-        policy,
-        nn_conf_func,
-        algo: str,  # Name/identifier of the DQN algorithm.
+        csv_dir_name: str,  # Directory name where the agent data is located
+        policy,  # policy Name/identifier
+        nn_conf_func,  # Function that return NN Congig (architecture, loss, and optimizer)
+        algo: str,  # Name/identifier of the algorithm.
         input_dim: tuple[int],  # Dimensions of the input data (state space).
         output_dim: int,  # Dimension of the output data (action space).
         lr: float = HYPER_PARAMS.lr,  # Learning rate
@@ -98,17 +83,14 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
         log_dir: str = HYPER_PARAMS.log_dir,  # Directory where TensorBoard logs are stored.
         load: bool = HYPER_PARAMS.load,  # Whether to load a pre-trained model and resume training.
         gpu: str = HYPER_PARAMS.gpu,  # identifier of GPU device
-        start_iteration: int = 0,  # ?? added
-        shuffle:bool=False,
-        BCQ_threshold:float=HYPER_PARAMS.BCQ_threshold,
+        shuffle: bool = False,  # Whether to shuffle agent data or not
+        BCQ_threshold: float = HYPER_PARAMS.BCQ_threshold,  #
     ):
         # Assertions for the attributes
         assert isinstance(gpu, str), "GPU identifier should be a string"
         assert isinstance(lr, float) and lr > 0, "Learning rate should be between 0 and 1"
         assert isinstance(gamma, float) and 0 < gamma <= 1, "Gamma should be between 0 and 1"
-
         assert isinstance(batch_size, int) and batch_size > 0, "Batch size should be a positive integer"
-
         assert isinstance(target_update_freq, int) and target_update_freq > 0, "Target update frequency should be a positive integer"
         assert isinstance(target_soft_update, bool), "Target soft update flag should be a boolean"
         assert isinstance(tau, float) and 0 < tau <= 1, "Tau should be a positive float between 0 and 1"
@@ -131,11 +113,12 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
         self.load = load
         self.input_dim = input_dim
         self.output_dim = output_dim
+
         ## Set up paths for saving models and logs
         self.path = algo[:-5] + "_lr_" + str(lr) + "_" + policy + "_model.pack"  # file name
         self.save_path = save_dir + self.path
         self.save_training_state_path = save_dir + "training_state_" + HYPER_PARAMS.buffer_location + "/" + self.path
-        self.summary_writer = SummaryWriter(log_dir + algo[:-5] +"_" + policy  + "/")
+        self.summary_writer = SummaryWriter(log_dir + algo[:-5] + "_" + policy + "/")
 
         ## Set device (GPU or CPU) for computation
         self.device = T.device(("cuda:" + gpu) if T.cuda.is_available() else "cpu")
@@ -145,25 +128,21 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
             self.device,
             "" if not T.cuda.is_available() else T.cuda.get_device_name(self.device),
         )
-        #! self.mode = mode
-        # Record the start time for logging
-        self.start_time = time.time()
 
-        self.threshold=BCQ_threshold
+        self.start_time = time.time()  # Record the start time for logging
+        self.resume_iteration = 0  # Iteration from which to resume training
+        self.iteration = 0  # training iteration counter
+        self.epoch = 0  # training epoch counter
 
-        #! nb_epoch: int = 16  # number of total iteration by the number of iterations by epoch)  #? added
-        self.resume_iteration = 0  # ? added
         self.csv_dir_path = os.path.join(HYPER_PARAMS.agent_data_dir, csv_dir_name)  # set the path to the agent data
-        self.shuffle=shuffle
-        self.size_agent_data = self.loading_agent_data(start_iteration)
-        self.iteration = 0  # ? added
+        self.shuffle = shuffle
+        self.threshold = BCQ_threshold
+        self.size_agent_data = self.loading_agent_data(self.resume_iteration)
 
-        self.epoch = 0  # ? added
-        # // self.loss_info_buffer: deque = deque([], maxlen=HYPER_PARAMS.log_freq)  # ? updated
+        # Initialize variables for tracking loss and training iterations
         self.loss_per_epoch = 0
         self.loss_per_set_iteration = 0
-        self.iter_per_epoch = int(self.size_agent_data / self.batch_size)  # ? added  # number of data sample devided by batch_size
-
+        self.iter_per_epoch = int(self.size_agent_data / self.batch_size)  # Number of data samples divided by batch size
 
         # Initialize the online and target networks.
         self.online_network = BCNetwork(self.device, self.lr, self.nn_conf_func, self.input_dim, self.output_dim)
@@ -171,64 +150,6 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
 
         # Set the target network's parameters equal to the online network's parameters (using hard update).
         self.update_target_network(force=True)
-
-   
-
-
-    def loading_agent_data(self, start_iteration):
-        # get csv files names
-        csv_files = [os.path.join(self.csv_dir_path, f) for f in os.listdir(self.csv_dir_path) if f.endswith(".csv")]
-
-        # Read all CSVs in one go
-        df = pd.concat([pd.read_csv(f) for f in csv_files], ignore_index=True)
-
-        # data to transition data
-        state_cols = [
-            "has_right_lane",
-            "has_left_lane",
-            "driving_in_weaving",
-            "dist_to_onramp",
-            "dist_to_offramp",
-            "leader_gap",
-            "leader_relatif_s",
-            "follower_gap",
-            "follower_relatif_s",
-            "left_leader_gap",
-            "left_leader_relatif_s",
-            "left_follower_gap",
-            "left_follower_relatif_s",
-            "right_leader_gap",
-            "right_leader_relatif_s",
-            "right_follower_gap",
-            "right_follower_relatif_s",
-        ]
-
-        next_state_cols = ["next_" + col for col in state_cols]
-
-        # input_dim, output_dim = len(state_cols), len(df["action"].unique())
-        # Convert to tensors
-        obses_t = T.tensor(df[state_cols].values, dtype=T.float32).to(self.device)
-        actions_t = T.tensor(df["action"].values, dtype=T.long).to(self.device).unsqueeze(1)
-        rews_t = T.tensor(df["reward"].values, dtype=T.float32).to(self.device).unsqueeze(1)
-        dones_t = T.tensor(df["done"].values, dtype=T.float32).to(self.device).unsqueeze(1)
-        new_obses_t = T.tensor(df[next_state_cols].values, dtype=T.float32).to(self.device)
-
-        # Create TensorDataset
-        dataset = TensorDataset(obses_t, actions_t, rews_t, dones_t, new_obses_t)
-
-        # Create DataLoader
-        self.dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=self.shuffle)
-
-        self.dataloader_iter = iter(self.dataloader)
-
-        # Skip batches if resuming (deque faster than for loop)
-        batches_to_skip = start_iteration % len(self.dataloader)
-        deque(islice(self.dataloader_iter, batches_to_skip), maxlen=0)
-
-        size_agent_data = len(df)
-        df.drop(df.index, inplace=True)  # memory freeing
-
-        return size_agent_data
 
     def update_target_network(self, force=False):
         """
@@ -281,7 +202,6 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
             f"  • Start time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.start_time))}\n"
         )
 
-
     def learn(self, transitions):
         """
         Implements a single step of the learning process for the discrete BCQ algorithm.
@@ -290,9 +210,6 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
         obses_t, actions_t, rews_t, dones_t, new_obses_t = transitions
 
         with T.no_grad():
-            #// # Compute target Q-values using the target network.
-            #// target_q_values = self.target_network(new_obses_t)
-
             # Get Q-values and IMT from online network for next state
             q, imt, _ = self.online_network(new_obses_t)
             imt = imt.exp()
@@ -307,21 +224,11 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
             # Compute target Q-values using target network
             q_target, _, _ = self.target_network(new_obses_t)
 
-
-            #// # Get the maximum Q-value for the next state.
-            #// max_target_q_values = target_q_values.max(dim=1, keepdim=True)[0]
-
-            #// # Calculate the targets for the loss function.
-            #// targets = rews_t + (1 - dones_t) * self.gamma * max_target_q_values
-            
-            # Calculate targets using BCQ-selected actions
+            # Get the maximum Q-value for the next state by concedering only BCQ-selected actions
             max_target_q_values = q_target.gather(1, next_action)
+
+            # Calculate the targets for the loss function.
             targets = rews_t + (1 - dones_t) * self.gamma * max_target_q_values
-
-           
-
-        #// # Get the Q-values from the online network for the current state.
-        #// online_q_values = self.online_network(obses_t)
 
         # Get Q-values and IMT from online network for current state
         online_q_values, imt, i = self.online_network(obses_t)
@@ -329,8 +236,6 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
         # Select the Q-values corresponding to the taken actions.
         action_q_values = T.gather(input=online_q_values, dim=1, index=actions_t)
 
-        #// # Compute the loss between the predicted and target Q-values
-        #// loss = self.online_network.loss(action_q_values, targets).to(self.device)
         # Compute BCQ losses
         q_loss = self.online_network.loss(action_q_values, targets).to(self.device)
         i_loss = F.nll_loss(imt, actions_t.reshape(-1))
@@ -343,11 +248,3 @@ class BCQAgent(AgentOffMixin, metaclass=CustomABCMeta):
 
         self.loss_per_epoch += loss.item()
         self.loss_per_set_iteration += loss.item()
-
-       
-
-
-        
-
-
-

@@ -17,50 +17,29 @@ class SumTree:
 
     """
 
-    def __init__(self, capacity: int,state_shape:tuple, cache:str, mode:str):
+    def __init__(self, capacity: int, state_shape: tuple, cache: str, mode: str):
         """
         Initialize the SumTree.
 
         Args:
             capacity (int):The maximum number of experiences the SumTree can store.
         """
-        self.mode=mode
+        self.mode = mode
         self.capacity = capacity  # the maximum number of experiences SumTree can store.
 
         # Initialize the tree with all nodes set to 0. As it's a binary tree, its size is 2 * capacity - 1.
         self.tree = np.zeros(2 * capacity - 1)
 
-        #// Initialize the data array with all values set to 0. This array will store experiences, so its size is equal to capacity.
-        self.cache=cache
-        self.state_shape=state_shape
-        #// self.data = np.empty(capacity, dtype=object)
+        self.cache = cache
+        self.state_shape = state_shape
 
-        self.states = np.memmap(
-            os.path.join(self.cache, "states.dat"),
-            dtype=np.float32, mode=self.mode,
-            shape=(capacity, *state_shape)
-        )
-        self.actions = np.memmap(
-            os.path.join(self.cache, "actions.dat"),
-            dtype=np.int64, mode=self.mode,
-            shape=(capacity,)
-        )
-        self.rewards = np.memmap(
-            os.path.join(self.cache, "rewards.dat"),
-            dtype=np.float32, mode=self.mode,
-            shape=(capacity,)
-        )
+        self.states = np.memmap(os.path.join(self.cache, "states.dat"), dtype=np.float32, mode=self.mode, shape=(capacity, *state_shape))
+        self.actions = np.memmap(os.path.join(self.cache, "actions.dat"), dtype=np.int64, mode=self.mode, shape=(capacity,))
+        self.rewards = np.memmap(os.path.join(self.cache, "rewards.dat"), dtype=np.float32, mode=self.mode, shape=(capacity,))
         self.next_states = np.memmap(
-            os.path.join(self.cache, "next_states.dat"),
-            dtype=np.float32, mode=self.mode,
-            shape=(capacity, *state_shape)
+            os.path.join(self.cache, "next_states.dat"), dtype=np.float32, mode=self.mode, shape=(capacity, *state_shape)
         )
-        self.dones = np.memmap(
-            os.path.join(self.cache, "dones.dat"),
-            dtype=np.float32, mode=self.mode,
-            shape=(capacity,)
-        )
-
+        self.dones = np.memmap(os.path.join(self.cache, "dones.dat"), dtype=np.float32, mode=self.mode, shape=(capacity,))
 
         self.data_pointer = 0  # Points to the next position/index to write in the data array.
         self.size = 0  # Current number of stored experiences
@@ -87,7 +66,7 @@ class SumTree:
         return {
             "capacity": self.capacity,  # Maximum number of experiences the SumTree can store.
             "tree": self.tree,  #  structure of the SumTree that holds data priorities.
-            #// "data": self.data,  # The data stored in the SumTree (e.g., experience tuples).
+            # // "data": self.data,  # The data stored in the SumTree (e.g., experience tuples).
             "data_pointer": self.data_pointer,  # Points to the next position/index to write in the data array.
             "size": self.size,  # Current number of stored experiences
             "max_priority_index": self.max_priority_index,  # Index of current max priority leaf
@@ -107,7 +86,6 @@ class SumTree:
         """
         self.capacity = sumTree_dict["capacity"]  # Maximum number of experiences the SumTree can store.
         self.tree = np.array(sumTree_dict["tree"]).copy()  #  structure of the SumTree that holds data priorities.
-        #//self.data = Deque(directory=self.cache.directory)# The data stored in the SumTree (e.g., experience tuples).
         self.data_pointer = sumTree_dict["data_pointer"]  # Points to the next position/index to write in the data array.
         self.size = sumTree_dict["size"]  # Current number of stored experiences
         self.max_priority_index = sumTree_dict["max_priority_index"]  # Index of current max priority leaf
@@ -201,13 +179,17 @@ class SumTree:
 
         data_index = leaf_index - self.capacity + 1  # Get the index of the data in data array
 
-        return leaf_index, self.tree[leaf_index], (
-                                                    self.states[data_index],
-                                                    self.actions[data_index],
-                                                    self.rewards[data_index],
-                                                    self.dones[data_index],
-                                                    self.next_states[data_index]
-                                                )  # Return the leaf index, priority, and data
+        return (
+            leaf_index,
+            self.tree[leaf_index],
+            (
+                self.states[data_index],
+                self.actions[data_index],
+                self.rewards[data_index],
+                self.dones[data_index],
+                self.next_states[data_index],
+            ),
+        )  # Return the leaf index, priority, and data
 
     @property
     def total_priority(self) -> float:

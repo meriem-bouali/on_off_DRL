@@ -16,7 +16,7 @@ class ReplayMemory(metaclass=CustomABCMeta):
         buffer_capacity (int): Maximum number of transitions the buffer can hold.
     """
 
-    def __init__(self, buffer_capacity: int, batch_size: int,state_shape:tuple,model:str):
+    def __init__(self, buffer_capacity: int, batch_size: int, state_shape: tuple, model: str):
         self.batch_size = batch_size
         self.buffer_capacity = buffer_capacity
 
@@ -129,16 +129,24 @@ class ReplayMemoryPrioritized(ReplayMemory):
         Args:
             buffer_capacity (int): The maximum number of transitions the buffer can hold.
             batch_size (int): The number of transitions to sample from the buffer.
-            eps_dec (float): The decay rate for the beta parameter (`beta` control probability of selecting each transition).
-
+            eps_dec (float): The decay rate for the beta parameter
+                (`beta` controls the probability correction weight of each transition).
 
         Attributes:
-        replay_buffer (SumTree): A SumTree that stores transitions with their associated priorities.
-        ....
+            replay_buffer (SumTree): A SumTree that stores transitions with their associated priorities.
+            epsilon (float): Small constant added to TD errors to ensure non-zero priorities.
+            alpha (float): Controls the degree of prioritization
+                (0 corresponds to uniform sampling, 1 to full prioritization).
+            beta_start (float): Initial value of the importance-sampling correction factor.
+            beta_end (float): Final value of the importance-sampling correction factor.
+            beta_inc (float): Increment rate of beta over training steps.
+            max_priority_high (float): Initial high priority assigned to new experiences.
 
-        from_dic: Reconstructs the ReplayMemoryNaive instance from a dictionary.
-        to_dic: Converts the ReplayMemoryNaive instance to a dictionary for serialization.
-        len: Returns the number of transitions currently stored in the replay buffer.
+
+        Methods:
+            from_dict: Reconstructs the ReplayMemoryPrioritized instance from a dictionary.
+            to_dict: Converts the ReplayMemoryPrioritized instance to a dictionary for serialization.
+            len: Returns the number of transitions currently stored in the replay buffer.
 
         """
         super(ReplayMemoryPrioritized, self).__init__(buffer_capacity, batch_size, state_shape, model)
@@ -146,20 +154,24 @@ class ReplayMemoryPrioritized(ReplayMemory):
         # Initialize the SumTree that stores transitions with their associated priorities.
         self.replay_buffer: SumTree = SumTree(self.buffer_capacity)
 
-        # tiny constant to ensure non-zero priorities
+        # Small constant added to TD error to avoid zero priority.
         self.epsilon = 0.0001
 
-        # Hyperparameter that Corrects the bias introduced by prioritization
-        # (0 corresponds to uniform sampling , 1 to full prioritization)
+        # Hyperparameter that controls prioritization strength
+        # (0 corresponds to uniform sampling, 1 to full prioritization).
         self.alpha = 0.6
 
-        # initial value importance-sampling weight factor, It address the bias introduced by the non-uniform sampling of experiences.
+        # Initial importance-sampling correction factor. For addressing the bias introduced by non-uniform sampling.
         self.beta_start = 0.4
+
         # Final value of importance-sampling weight factor
         self.beta_end = 1.0
 
-        self.beta_inc = eps_dec  # Increment rate of the beta parameter, interpolated over training steps.
-        self.max_priority_high = 1.0  # Initial high priority assigned to new experiences.
+        # Number of steps used to gradually reduce beta from beta_start to beta_end
+        self.beta_inc = eps_dec
+
+        # Default high priority assigned to newly added experiences.
+        self.max_priority_high = 1.0
 
     def len(self):
         """Returns the number of stored experiences in the replay buffer"""
@@ -167,15 +179,14 @@ class ReplayMemoryPrioritized(ReplayMemory):
 
     def to_dict(self):
         """
-        Convert the instance of ...... to a dictionary.
+        Convert the ReplayMemoryPrioritized instance to a dictionary.
 
-        This method is useful for saving the state of the SumTree instance to a file.
-        The dictionary representation allows for easy serialization and storage of
-        the ...........'s state, which can later be used to reconstruct the instance.
+        This method is useful for saving the state of the ReplayMemoryPrioritized to a file.
+        The dictionary representation allows easy serialization and storage
+        of the ReplayMemoryPrioritized state, which can later be used to reconstruct the ReplayMemoryPrioritized .
 
-        Returns:
-            dict: A dictionary representation of the ........ instance containing all essential attributes.
-
+        Returns:.
+            dict: A dictionary representation of the ReplayMemoryPrioritized instance containing all essential attributes.
         """
         return {
             "max_priority_high": self.max_priority_high,
@@ -184,23 +195,24 @@ class ReplayMemoryPrioritized(ReplayMemory):
 
     def from_dict(self, buffer_dict: dict):
         """
-        Convert a dictionary back to an instance of ........
+        Restore a ReplayMemoryPrioritized instance from a dictionary.
 
-        This method reconstructs a ....... instance from a dictionary representation.
-        The dictionary, typically loaded from a file, contains all necessary attributes
-        to restore the state of the ........
+        This method reconstructs a ReplayMemoryPrioritized instance from a dictionary representation.
+        The dictionary,loaded from a file, contains all necessary attributes to restore the replay buffer state.
 
         Args:
-            buffer_dict (dict): A dictionary containing the attributes of the SumTree instance.
+            buffer_dict (dict):  Dictionary containing serialized replay buffer attributes.
         """
+
         self.max_priority_high = buffer_dict["max_priority_high"]
         self.replay_buffer.from_dict(buffer_dict["replay_buffer"])
 
     def store_transitions(self, obses, actions, rews, dones, new_obses):
         """
-        Store a batch of transitions in the Per replay memory.
+        Store a batch of transitions in prioritized replay memory.
 
-        Each new experience will have a score of max_prority (it will be then improved when we use this exp to train our DDQN)
+        Each new experience is assigned the maximum current priority so it has  a high probability of being sampled at least once before its priority
+        is updated based on TD error.
 
         Yields:
             int: The index of the transition where the episode ended.
@@ -208,8 +220,8 @@ class ReplayMemoryPrioritized(ReplayMemory):
 
         max_priority = self.replay_buffer.max_priority
 
-        # If the tree is empty (max priority = 0) we can't put priority = 0 since this experience will never have a chance to be selected
-        # If the tree is empty, use a default high priority for the first experiences.
+        # If the tree is empty (max priority = 0), assign `max_priority_high` to new experiences.
+        # Otherwise, new experiences will directly receive `max_priority`.
         if max_priority == 0:
             max_priority = self.max_priority_high
 
@@ -224,12 +236,11 @@ class ReplayMemoryPrioritized(ReplayMemory):
 
     def sample_transitions(self, step: int):
         """
-        Sample a batch of transitions from the replay memory.
-
-        Importance-sampling weights (Beta) are calculated for each sampled transition.
+        Sample a batch of transitions from prioritized replay memory.
+        Importance-sampling weights (beta) are computed for each sampled transition to compensate for the bias introduced by prioritized sampling.
 
         Args:
-            step (int): The current training step, used to calculate the beta parameter.
+            step (int): Current training step, used to gradually reduce the beta parameter.
         """
         is_weights, tree_indices, transitions = [], [], []
 
@@ -265,9 +276,10 @@ class ReplayMemoryPrioritized(ReplayMemory):
         Update the priorities of a previously sampled batch of transitions in the SumTree
 
         Args:
-            tree_indices (list): The indices in the SumTree of the transitions to update.
-            abs_td_errors_np (numpy.ndarray): The absolute TD errors for the transitions.
+            tree_indices (list): Indices of the sampled transitions in the SumTree.
+            abs_td_errors_np (numpy.ndarray): Absolute TD errors of the sampled transitions.
         """
+
         # Calculate the new priorities using the absolute TD errors.
         priorities = list(np.power(np.minimum(abs_td_errors_np + self.epsilon, self.max_priority_high), self.alpha))
 

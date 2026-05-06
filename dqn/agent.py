@@ -26,7 +26,7 @@ This module implements different Deep Q-Network (DQN) algorithms.
     - The `Agent` class defines the common attributes and methods required by the DQN algorithms, such as model saving/loading, logging,
       storing transitions, action selection, etc.
     - The `SimpleAgent`, `DoubleAgent`, and `PerDoubleAgent` classes inherit from the `Agent` class and define the `learn()` function, 
-      which implements a single step of the learning process for a given DQN algorithm.
+      which performs a single learning step for a given DQN algorithm.
     - The `DQNAgent`, `DoubleDQNAgent`, `DuelingDoubleDQNAgent`, and `PerDuelingDoubleDQNAgent` classes initialize the neural networks 
       and replay memory required for each algorithm.
 """
@@ -38,10 +38,11 @@ class Agent(AgentMixin, metaclass=CustomABCMeta):
     Define the common attributes and methods required by the DQN algorithmes.
     These functions include model saving/loading, logging, storing transitions, selecting actions, etc.
 
-    Attributes:
+    Args:
         n_env (int): Number of environments used for Multi-processing/parallel learning.
         lr (float): Learning rate.
         gamma (float): Discount factor.
+        policy (str) : Policy name or identifier used by the agent.
         eps_start (float): Initial value of epsilon .
         eps_min (float): Minimum (end) value of epsilon to which epsilon will decay.
         eps_dec (int): Number of steps for epsilon to decay to its minimum value.
@@ -84,8 +85,8 @@ class Agent(AgentMixin, metaclass=CustomABCMeta):
 
     def __init__(
         self,
-        policy,
-        nn_conf_func,
+        policy,  # policy Name/identifier
+        nn_conf_func,  # Function that return NN Congig (architecture, loss, and optimizer)
         algo: str,  # Name/identifier of the DQN algorithm.
         input_dim: tuple[int],  # Dimensions of the input data (state space).
         output_dim: int,  # Dimension of the output data (action space).
@@ -172,7 +173,7 @@ class Agent(AgentMixin, metaclass=CustomABCMeta):
         self.path = algo[:-5] + "_lr_" + str(lr) + "_" + policy + "_model.pack"  # file name
         self.save_path = save_dir + self.path
         self.save_training_state_path = save_dir + "training_state_" + HYPER_PARAMS.buffer_location + "/" + self.path
-        self.summary_writer = SummaryWriter(log_dir + algo[:-5] +"_" + policy  + "/")
+        self.summary_writer = SummaryWriter(log_dir + algo[:-5] + "_" + policy + "/")
 
         self.loss_per_set_iteration = 0
 

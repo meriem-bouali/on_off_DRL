@@ -11,7 +11,6 @@ import msgpack
 import msgpack_numpy as m
 
 
-
 import copy
 
 
@@ -59,7 +58,6 @@ class Network(nn.Module):
         """
         raise NotImplementedError
 
-
     def load(self, load_path: str):
         """
         Load the model parameters for testing #//and training progress from a file.
@@ -85,9 +83,10 @@ class Network(nn.Module):
         # Return the training progress statistics
         # return params_dict["step"], params_dict["episode_count"], params_dict["rew_mean"], params_dict["len_mean"]
 
+
 class BCNetwork(Network):
     """
-    
+    This class implements a Q-network and a behavior policy network for the BCQ (Batch-Constrained Q-learning) algorithm
     """
 
     def __init__(
@@ -109,15 +108,18 @@ class BCNetwork(Network):
         """
         super(BCNetwork, self).__init__(device, nn_conf_func, input_dim)
 
-        # Define the output layer for action values
+        # Output layer for Q-network
         self.fc_out = nn.Linear(self.fc_out_dim, output_dim)
-        self.fc_out_bc = nn.Linear(self.fc_out_dim, output_dim)  #! added 
-        self.net_bc=copy.deepcopy(self.net)  # same architecture, independent weights
+
+        # Output layer for behavior policy
+        self.fc_out_bc = nn.Linear(self.fc_out_dim, output_dim)
+
+        # Create an independent copy of the Q-network to serve as the behavior network (same architecture, separate weights)
+        self.net_bc = copy.deepcopy(self.net)
 
         # Set up optimizer and loss function
         self.optimizer = self.optim_func(self.parameters(), lr=lr)
         self.loss = self.loss_func(reduction=reduction)
-       
 
         self.to(self.device)
 
@@ -126,31 +128,31 @@ class BCNetwork(Network):
         Forward pass through the network.
 
         Args:
-            s (torch.Tensor): batch of observation.
+            s (torch.Tensor): Batch of observations.
 
         Returns:
-            torch.Tensor: Output tensor representing Q-values for each action.
+            tuple:
+                - Q-values for each action
+                - Log-probabilities from behavior policy network
+                - Raw behavior policy logits
         """
-
-        # # Check that input is of expected types
-        # assert isinstance(s, T.Tensor), f"Expected 's' to be torch.Tensor , but got {type(s).__name__}."
 
         net = self.net(s)
         a = self.fc_out(net)
-        net_bc=self.net_bc(s)
+        net_bc = self.net_bc(s)
         i = self.fc_out_bc(net_bc)
 
         return a, F.log_softmax(i, dim=1), i
-    
+
     def actions(self, obses: np.ndarray) -> list:
         """
-        return the best actions based on the current observations.
+        Compute greedy actions of each observation from Q-network.
 
         Args:
-            obses (numpy.ndarray): List of observations, number of observation depend on the n_env.
+            obses (np.ndarray): Batch of observations, number of observations depend on the n_env..
 
         Returns:
-            list: List of greedy actions.
+            list: Greedy actions for each observation.
         """
 
         # Check that input is of expected types
@@ -160,7 +162,7 @@ class BCNetwork(Network):
         obses_t = T.as_tensor(obses, dtype=T.float32).to(self.device)
 
         # compute the q_values of each possible actions
-        q_values,_,_ = self(obses_t)
+        q_values, _, _ = self(obses_t)
 
         # get greedy action for each observation
         max_q_indices = T.argmax(q_values, dim=1)
@@ -168,6 +170,7 @@ class BCNetwork(Network):
         actions = max_q_indices.detach().tolist()
 
         return actions
+
 
 class DeepQNetwork(Network):
     """
@@ -184,9 +187,7 @@ class DeepQNetwork(Network):
         Initialize the DeepQNetwork class.
 
         Args:
-            ....
             lr (float): Learning rate for the optimizer. how much the optimizer should change parameters at each step
-            ....
             output_dim (np.int64): The dimension of the output (number of actions).
             reduction (str): The reduction method for the loss function.
                              Specifies how the computed loss should be aggregated across a batch of data
