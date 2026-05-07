@@ -6,9 +6,6 @@ from dataclasses import dataclass
 import torch
 import os
 
-# from rl_env.custom_env.env_config import EnvConfig as EC
-from dqn.utils.depthwise_separable_conv2d import DepthwiseSeparableConv2d
-
 
 @dataclass
 class HYPER_PARAMS:
@@ -47,10 +44,10 @@ class HYPER_PARAMS:
     # )  # Directory where TensorBoard logs for episode_metrics are stored
 
     # ## OFF DQN Hyperparameters
-    nb_total_iteration: int = int(max_total_steps / n_env) #- int(min_buffer_size / n_env)  # ? added
+    nb_total_iteration: int = int(max_total_steps / n_env)  # - int(min_buffer_size / n_env)  # ? added
 
     ## BCQ Hyperparameters
-    BCQ_threshold=0.3
+    BCQ_threshold = 0.3
 
     ##########################################################
     ############ Assertions for the attributes ###############

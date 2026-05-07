@@ -11,6 +11,8 @@ build/
 *.pyo
 *.pyd
 
+# Virtual environments
+.venv
 
 # VS Code specific
 .vscode/settings.json
