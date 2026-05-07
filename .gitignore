@@ -24,8 +24,8 @@ build/
 
 
 # logs/
-logs/train/episode_metrics
-logs/train/loss_metrics
+src/logs/train/episode_metrics
+src/logs/train/loss_metrics
 
 
 # ipython notebook checkpoints
