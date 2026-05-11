@@ -17,11 +17,13 @@ m.patch()  # automatically force all msgpack serialization and deserialization r
 class AgentMixin:
     def save_training_state(self):
         """
-        Save the training state in pack file:
-            - online and  target network parameters
-            - replay buffer
-            - episode info buffer
-            - step count and episode count
+        Save a full training checkpoint including:
+           - online & target network parameters
+           - optimizer state
+           - replay buffer
+           - episode buffer
+           - step + episode counters
+           - loss tracking
         """
         print(Fore.LIGHTCYAN_EX, "\n Saving training state...", Fore.RESET)
 
