@@ -1,0 +1,8 @@
+actions,num_states,action_names
+1,4629675,LK
+2,1181489,LLC
+0,856698,RLC
+"1,2",107235,"LK, LLC"
+"0,1",93042,"RLC, LK"
+"0,2",9622,"RLC, LLC"
+"0,1,2",56553,"RLC, LK, LLC"

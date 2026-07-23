@@ -10,12 +10,6 @@ import torch as T
 from torch.utils.tensorboard.writer import SummaryWriter
 
 
-# // if HYPER_PARAMS.buffer_location == "disk":
-# //     from .replay_memory_disk import ReplayMemoryNaive, ReplayMemoryPrioritized
-# // else:
-# //     from .replay_memory_ram import ReplayMemoryNaive, ReplayMemoryPrioritized
-
-
 """
 This module implements different Deep Q-Network (DQN) algorithms.
     - The `Agent` class defines the common attributes and methods required by the DQN algorithms, such as model saving/loading, logging,
@@ -89,7 +83,7 @@ class AgentOff(AgentOffMixin, metaclass=CustomABCMeta):
         save_freq: int = HYPER_PARAMS.save_freq,  # Frequency (in steps) at which the model is saved
         log_freq: int = HYPER_PARAMS.log_freq,  # Frequency (in steps) at which training metrics are logged.
         save_dir: str = HYPER_PARAMS.save_dir,  # Directory where the model is saved.
-        log_dir: str = HYPER_PARAMS.log_dir,  # Directory where TensorBoard logs are stored.
+        log_dir: str = HYPER_PARAMS.log_dir+"train/",  # Directory where TensorBoard logs are stored.
         load: bool = HYPER_PARAMS.load,  # Whether to load a pre-trained model and resume training.
         gpu: str = HYPER_PARAMS.gpu,  # identifier of GPU device
         shuffle: bool = False,  # Whether to shuffle agent data or not
@@ -147,7 +141,7 @@ class AgentOff(AgentOffMixin, metaclass=CustomABCMeta):
         self.iteration = 0  # training iteration counter
         self.epoch = 0  # training epoch counter
 
-        self.csv_dir_path = os.path.join(HYPER_PARAMS.agent_data_dir, csv_dir_name)  # set the path to the agent data
+        self.csv_dir_path = os.path.join(HYPER_PARAMS.agent_data_dir,"train", csv_dir_name)  # set the path to the agent data
         self.shuffle = shuffle
         self.size_agent_data = self.loading_agent_data(self.resume_iteration)
 

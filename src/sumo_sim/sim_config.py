@@ -19,9 +19,26 @@ class SimulationConfig:
     seed_train=["23423","42", "123", "256", "314", "1337", "1500", "1729"]
     seed_test=["11149", "20952", "8024", "25018", "5231", "2848", "24132", "3648", "29234", "7055", "6515", "17856", "7164", "16559", "19309", "7623", "3358", "7223", "13848", "13825", "11029", "21295", "18390", "9115", "976", "1041", "24270", "9105", "23462", "22981", "819", "3070", "869", "19726", "17870", "4572", "24299", "9012", "24864", "13746", "28485", "212", "26523", "14719", "26405", "7314", "5094", "22876", "19349", "22174"]
 
+    
     @dataclass
     class vTypeColor:
         aggressive = "#00FFFF"
         normal = "#FF4500"
         conservative = "#32CD32"
         ego = "magenta"
+
+
+
+if __name__ == "__main__":
+    import random
+    random.seed(42)
+
+    # Generate 120 unique random integers
+    all_seeds = random.sample(range(1, 30000), 120)
+
+    # Split into train and test
+    seed_train = [str(x) for x in all_seeds[:20]]
+    seed_test = [str(x) for x in all_seeds[20:]]
+
+    print("seed_train =", seed_train)
+    print("seed_test =", seed_test)

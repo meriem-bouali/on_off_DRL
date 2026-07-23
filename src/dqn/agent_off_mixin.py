@@ -133,11 +133,13 @@ class AgentOffMixin:
 
     def save_training_state(self):
         """
-        Save the training state in pack file:
-            - online and  target network parameters
-            - replay buffer
-            - episode info buffer
-            - step count and episode count
+        Save a full training checkpoint including:
+           - online & target network parameters
+           - optimizer state
+           - replay buffer
+           - episode buffer
+           - step + episode counters
+           - loss tracking
         """
         print(Fore.LIGHTCYAN_EX, "\n Saving training state...", Fore.RESET)
 
@@ -176,7 +178,7 @@ class AgentOffMixin:
         """
         Loads a previously saved training state if available.:
             - online and  target network parameters
-            - ietration count and epoch count
+            - iteration count and epoch count
         """
 
         print("\n Resume training from " + self.save_training_state_path + "...")

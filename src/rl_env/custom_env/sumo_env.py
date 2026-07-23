@@ -217,7 +217,7 @@ class SumoEnv(RewardMixin, UtilsMixin):
         self.update_tracking_metrics(action, is_valide_lane)
 
         done = self.truncated() or self.terminated()
-        info = {"l": self.time_step, "r": self.total_reward}
+        info = {"l": self.time_step, "r": round(self.total_reward,2)}
         if done:
             self.set_episode_metrics(info)
 
@@ -252,7 +252,7 @@ class SumoEnv(RewardMixin, UtilsMixin):
 
     def set_episode_metrics(self, info):
         info["episode_length"] = self.time_step
-        info["episode_total_reward"] = self.total_reward
+        info["episode_total_reward"] = round(self.total_reward,2)
         info["episode_nb_lc"] = self.nb_lc
         info["episode_nb_mingap_violation"] = self.nb_mingap_violation
         info["episode_nb_emrgency_braking"] = self.nb_emrgency_braking

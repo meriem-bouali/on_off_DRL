@@ -7,9 +7,10 @@ import json
 from tensorboard.backend.event_processing import event_accumulator
 from datetime import datetime
 
+from dqn import  HYPER_PARAMS
 
 class Logger:
-    def __init__(self, algo, mode, policy, store_trs=True, store_episode_metrics=False):
+    def __init__(self, algo, mode, policy, store_trs=True, store_episode_metrics=False, extra=None):
         # Create a timestamp string for unique file naming
         time = datetime.now().strftime("(%Y-%m-%d_%H-%M)")
 
@@ -18,27 +19,32 @@ class Logger:
             # Path for episode metrics (TensorBoard)
             if policy == "OnRL" or policy == "OnOnRL": # to check 
                 self.log_episode_metrics_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)), f"logs/{mode}_episode_metrics", algo + "_" + policy
+                    HYPER_PARAMS.log_dir, f"{mode}_episode_metrics", algo + "_" + policy
                 )
                 self.summary_writer_metrics_eps = SummaryWriter(self.log_episode_metrics_path)
 
         
         if mode == "train":
-            self.log_loss_metrics_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), f"logs/{mode}", algo + "_" + policy)
+            self.log_loss_metrics_path = os.path.join(HYPER_PARAMS.log_dir, mode, algo + "_" + policy)
             self.summary_writer_metrics_loss = SummaryWriter(self.log_loss_metrics_path)
 
         # TESTING MODE LOGGING SETUP
         if mode == "test":
             # Path for storing test results as CSV
             self.log_csv_test_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), f"logs/{mode}", algo + "_" + policy + "_" + time
+                HYPER_PARAMS.log_dir, f"{mode}_{extra}", algo + "_" + policy + "_" + time
             )
             os.makedirs(os.path.dirname(self.log_csv_test_path), exist_ok=True)
 
         # csv TRANSITION STORAGE SETUP
         if store_trs:
-            self.csv_transition_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), f"agent_data/{mode}/transition_csv_{algo}_{policy}_{time}/{algo}_{policy}"
+            if mode=="test":
+                self.csv_transition_path = os.path.join(
+                HYPER_PARAMS.agent_data_dir, f"{mode}_{extra}/transition_csv_{algo}_{policy}_{time}.csv"
+            )
+            else:
+                self.csv_transition_path = os.path.join(
+                HYPER_PARAMS.agent_data_dir, f"{mode}/transition_csv_{algo}_{policy}_{time}/{algo}_{policy}"
             )
             os.makedirs(os.path.dirname(self.csv_transition_path), exist_ok=True)
 
@@ -71,6 +77,56 @@ class Logger:
             csv_writer.writerow(info)
             f.close()
 
+    def store_trans_test(self,episode_count,obse, action, reward, done, new_obse):
+        
+        with open(self.csv_transition_path, mode="a", newline="") as f:
+            # Write header
+            csv_writer = csv.writer(
+                f,
+                delimiter=",",
+                lineterminator="\n",
+            )
+
+            if os.path.getsize(self.csv_transition_path) == 0:
+                obs_columns = [
+                    "has_right_lane",
+                    "has_left_lane",
+                    "driving_in_weaving",
+                    "dist_to_onramp",
+                    "dist_to_offramp",
+                    "leader_gap",
+                    "leader_relatif_s",
+                    "follower_gap",
+                    "follower_relatif_s",
+                    "left_leader_gap",
+                    "left_leader_relatif_s",
+                    "left_follower_gap",
+                    "left_follower_relatif_s",
+                    "right_leader_gap",
+                    "right_leader_relatif_s",
+                    "right_follower_gap",
+                    "right_follower_relatif_s",
+                ]
+                header = ["trans_idx","episode_count"] + obs_columns + ["action", "reward", "done"] + [f"next_{col}" for col in obs_columns]
+
+                # Write header
+                csv_writer.writerow(header)
+
+            # Write data rows
+            csv_writer.writerow(
+                [
+                    self.trans_idx_count,
+                    episode_count,
+                    *obse,
+                    action,
+                    reward,
+                    done,
+                    *new_obse,
+                ]
+            )
+            self.trans_idx_count += 1
+            f.close()
+    
     def store_trans_csv(self, obses, actions, rewards, dones, new_obses):
         file_name = self.csv_transition_path + "_" + str(self.transition_file_count) + ".csv"
         file_exists = os.path.isfile(file_name)

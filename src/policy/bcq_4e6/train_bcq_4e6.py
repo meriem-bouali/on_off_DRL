@@ -7,6 +7,7 @@ import itertools
 
 from policy.logger import Logger
 
+from policy.utils import set_seed
 
 """
 This module implements a training loop for a Deep Q-Network (DQN) agent
@@ -94,6 +95,7 @@ class TrainBCQ4e6:
                 exit()
 
     def run(self):
+        set_seed()
         try:
             # start the training loop
             print("\n Start Training")
@@ -104,4 +106,4 @@ class TrainBCQ4e6:
 
 
 if __name__ == "__main__":
-    TrainBCQ4e6(csv_dir_path="transition_csv_DoubleDQN_OnRL_16e6", max_total_iteration=HYPER_PARAMS.nb_total_iteration).run()
+    TrainBCQ4e6(csv_dir_path="transition_csv_DoubleDQN_OnRL", max_total_iteration=HYPER_PARAMS.nb_total_iteration).run()

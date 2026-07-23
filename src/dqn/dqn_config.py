@@ -25,7 +25,11 @@ class HYPER_PARAMS:
     log_freq: int = 1000  # Frequency (in steps/iteration) at which training metrics are logged.
     save_freq: int = 1000  # Frequency (in steps/iterations) at which the model is saved
     save_dir: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "save/")  # Directory where the model is saved.
-    agent_data_dir: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "agent_data", "train")  #
+    agent_data_dir: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "agent_data/")  #
+    log_dir: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs/")  # Directory where TensorBoard logs are stored.
+    # log_episode_metrics_dir = os.path.join(
+    #     os.path.dirname(os.path.dirname(__file__)), "logs/episode_metrics/"
+    # )  # Directory where TensorBoard logs for episode_metrics are stored
 
     ## ON DQN hyperparametres
     n_env: int = 4  # Number of environments used for Multi-processing/parallel learning
@@ -37,11 +41,8 @@ class HYPER_PARAMS:
     buffer_capacity: int = 1000000  # Replay memory buffer capacity  # DQN Paper
     ep_info_buffer_capacity: int = 100  # Maximum number of episodes to retain information in the buffer
     max_total_steps: int = int(16e6)  # int(8e6)  # Max total training steps if > 0, else inf training
-    buffer_location: str = "disk"
-    log_dir: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs/train/")  # Directory where TensorBoard logs are stored.
-    # log_episode_metrics_dir = os.path.join(
-    #     os.path.dirname(os.path.dirname(__file__)), "logs/episode_metrics/"
-    # )  # Directory where TensorBoard logs for episode_metrics are stored
+    buffer_location: str = "ram"  # or disk
+    
 
     # ## OFF DQN Hyperparameters
     nb_total_iteration: int = int(max_total_steps / n_env)  # - int(min_buffer_size / n_env)  # ? added

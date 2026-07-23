@@ -106,7 +106,7 @@ class Agent(AgentMixin, metaclass=CustomABCMeta):
         save_freq: int = HYPER_PARAMS.save_freq,  # Frequency (in steps) at which the model is saved
         log_freq: int = HYPER_PARAMS.log_freq,  # Frequency (in steps) at which training metrics are logged.
         save_dir: str = HYPER_PARAMS.save_dir,  # Directory where the model is saved.
-        log_dir: str = HYPER_PARAMS.log_dir,  # Directory where TensorBoard logs are stored.
+        log_dir: str = HYPER_PARAMS.log_dir+"train/",  # Directory where TensorBoard logs are stored.
         load: bool = HYPER_PARAMS.load,  # Whether to load a pre-trained model and resume training.
         gpu: str = HYPER_PARAMS.gpu,  # identifier of GPU device
     ):

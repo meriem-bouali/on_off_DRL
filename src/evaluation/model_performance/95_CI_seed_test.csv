@@ -1,0 +1,4 @@
+,On-DDQN,Off-DDQN-4e6,BCQ-4e6,Off-DDQN-4e6-Clean,BCQ-4e6-Clean,Off-DDQN-4e6-Shuffle,BCQ-4e6-Shuffle,Off-DDQN-4e6-Clean-Shuffle,BCQ-4e6-Clean-Shuffle,Off-DDQN-8e6-Clean,BCQ-8e6-Clean
+Avg. Episode Reward,-24.27,-33.18,-37.83,-23.84,-27.29,-61.5,-77.37,-30.41,-40.03,-25.71,-26.23
+Upper 95% CI ,-16.71,-24.33,-24.14,-17.32,-19.62,-46.05,-60.65,-22.51,-29.85,-17.45,-20.28
+Lower 95% CI,-33.17,-43.11,-53.84,-31.5,-36.21,-78.14,-95.35,-39.69,-52.0,-36.4,-33.14

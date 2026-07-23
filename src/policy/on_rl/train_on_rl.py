@@ -8,7 +8,7 @@ import itertools
 from datetime import timedelta
 
 from policy.logger import Logger
-
+from policy.utils import set_seed
 
 """
 This module implements a training loop for a Deep Q-Network (DQN) agent
@@ -155,12 +155,13 @@ class TrainOnRL:
                 exit()
 
     def run(self):
+        set_seed()
         try:
             if self.agent.replay_memory_buffer.len() < self.agent.min_buffer_size:  # Check if the replay buffer is empty
                 # fills up the buffer with initial experiences
                 self.init_replay_memory_buffer()
             else:
-                # The replay buffer is already filled/initialized because load_training_state() is called inside agent.__init__()
+                # The replay buffer is already filled/initialized because load_training_state() is called inside agent.resume_trainning() in the case buffer_location="disk"
                 print("Loading training state...")
 
             # start the training loop
@@ -176,6 +177,7 @@ class TrainOnRL:
                 if "sumo" in proc.info["name"] or "sumo-gui" in proc.info["name"]:
                     os.kill(proc.info["pid"], signal.SIGTERM)  # Or SIGKILL for forceful termination
                     print(f"Killed process {proc.info['name']} with PID {proc.info['pid']}")
+            
             self.agent.save_training_state()
             self.agent.save_model()
 

@@ -2,7 +2,6 @@ import traci
 from rl_env.custom_env.env_config import EnvConfig as EC
 from colorama import Fore
 
-
 class RewardMixin:
     def reward_collision(self, veh_id, is_valide_lc):
         collisions = traci.simulation.getCollidingVehiclesIDList()

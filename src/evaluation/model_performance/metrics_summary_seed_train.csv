@@ -1,0 +1,7 @@
+Metric,On-DDQN,Off-DDQN-4e6,BCQ-4e6,Off-DDQN-4e6-Clean,BCQ-4e6-Clean,Off-DDQN-4e6-Shuffle,BCQ-4e6-Shuffle,Off-DDQN-4e6-Clean-Shuffle,BCQ-4e6-Clean-Shuffle,Off-DDQN-8e6-Clean,BCQ-8e6-Clean
+Avg. Episode Reward,-13.06,-30.04,-25.32,-21.68,-15.27,-72.84,-72.89,-31.61,-27.64,-18.51,-18.63
+Avg. Veh. Speed,27.94,27.61,27.92,27.6,27.83,27.72,27.46,27.18,27.67,27.46,27.55
+Avg. Episode Nb. LC,4.25,10.88,10.38,8.75,5.75,16.38,21.12,6.12,10.88,4.62,5.38
+Total Nb. Min. Gap Viol.,0.0,1.0,0.0,1.0,0.0,5.0,5.0,3.0,0.0,1.0,1.0
+Total Nb. Invalid LC,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Total Nb. Veh. Collisions,0.0,1.0,1.0,0.0,0.0,6.0,5.0,1.0,1.0,0.0,0.0
